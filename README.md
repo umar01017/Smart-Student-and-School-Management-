@@ -13,6 +13,10 @@ A production-ready web application built with Python Flask, MongoDB, and Bootstr
 
 ### 1. Install Libraries
 Open your terminal/command prompt and navigate to the project folder, then run:
+
+-- bash
+ .\venv\Scripts\activate
+ 
 ```bash
 pip install -r requirements.txt
 ```
