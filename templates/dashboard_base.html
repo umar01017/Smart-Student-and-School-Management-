@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <nav class="sidebar col-md-3 col-lg-2 d-md-block bg-white collapse">
+        <div class="position-sticky sidebar-sticky">
+            <div class="text-center py-4 mb-3 border-bottom">
+                <i class="fas fa-graduation-cap fs-1 text-primary mb-2"></i>
+                <h5 class="fw-bold">Smart System</h5>
+            </div>
+            <ul class="nav flex-column mb-auto">
+                {% if session.role == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_students' %}active{% endif %}" href="/admin/students">
+                        <i class="fas fa-user-graduate"></i> Students
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_teachers' %}active{% endif %}" href="/admin/teachers">
+                        <i class="fas fa-chalkboard-teacher"></i> Teachers
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_attendance' %}active{% endif %}" href="/admin/attendance">
+                        <i class="fas fa-clipboard-check"></i> Attendance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_fees' %}active{% endif %}" href="/admin/fees">
+                        <i class="fas fa-file-invoice-dollar"></i> Fee Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_salaries' %}active{% endif %}" href="/admin/salaries">
+                        <i class="fas fa-money-check-alt"></i> Salaries
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_settings' %}active{% endif %}" href="/admin/settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </li>
+                <li class="nav-item mt-3">
+                    <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">
+                        <span>Extra Modules</span>
+                    </h6>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_expenses' %}active{% endif %}" href="/admin/expenses">
+                        <i class="fas fa-receipt"></i> Daily Expenses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_infrastructure' %}active{% endif %}" href="/admin/infrastructure">
+                        <i class="fas fa-building"></i> Infrastructure
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_library' %}active{% endif %}" href="/admin/library">
+                        <i class="fas fa-book"></i> Library
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'admin_finance' %}active{% endif %}" href="/admin/finance">
+                        <i class="fas fa-chart-bar"></i> Financial Reports
+                    </a>
+                </li>
+                {% elif session.role == 'teacher' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'teacher_dashboard' %}active{% endif %}" href="{{ url_for('teacher_dashboard') }}">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'teacher_attendance' %}active{% endif %}" href="/teacher/attendance">
+                        <i class="fas fa-clipboard-list"></i> Mark Attendance
+                    </a>
+                </li>
+                {% elif session.role == 'student' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'student_dashboard' %}active{% endif %}" href="{{ url_for('student_dashboard') }}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'student_profile' %}active{% endif %}" href="/student/profile">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'student_fees' %}active{% endif %}" href="/student/fees">
+                        <i class="fas fa-wallet"></i> My Fees
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content bg-light">
+        <div class="top-navbar d-flex justify-content-between align-items-center mt-3 border-0">
+            <h4 class="mb-0 fw-bold text-dark">{% block page_title %}Dashboard{% endblock %}</h4>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name={{ session.username }}&background=667eea&color=fff" alt="mdo" width="40" height="40" class="rounded-circle me-2 shadow-sm border border-2 border-white">
+                        <strong class="d-none d-sm-block">{{ session.username }}</strong>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownUser1">
+                        {% if session.role == 'student' %}
+                        <li><a class="dropdown-item" href="/student/profile"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% block dashboard_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

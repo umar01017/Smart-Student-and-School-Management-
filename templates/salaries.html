@@ -1,0 +1,83 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Salary Management{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 mb-4 fade-in">
+    <!-- Add Salary Form -->
+    <div class="col-xl-4">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Assign Staff Salary</h5>
+            <form action="{{ url_for('add_salary') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Teacher</label>
+                    <select class="form-select bg-light border-0" name="teacher_id" required>
+                        <option value="" selected disabled>Select a teacher...</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher._id }}">{{ teacher.name }} ({{ teacher.subject }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Amount ($)</label>
+                    <input type="number" step="0.01" class="form-control bg-light border-0" name="amount" placeholder="e.g. 3000.00" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Payroll Month</label>
+                    <input type="month" class="form-control bg-light border-0" name="month" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-bold shadow-sm">Add Salary Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Salaries Table -->
+    <div class="col-xl-8">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Payroll History</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Teacher</th>
+                            <th scope="col" class="py-3 px-4">Month</th>
+                            <th scope="col" class="py-3 px-4">Amount</th>
+                            <th scope="col" class="py-3 px-4 text-center">Status</th>
+                            <th scope="col" class="py-3 px-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sal in salaries %}
+                        <tr>
+                            <td class="px-4 fw-semibold">{{ sal.teacher_name }}</td>
+                            <td class="px-4 text-muted">{{ sal.month }}</td>
+                            <td class="px-4 fw-bold text-success">${{ '%.2f' % sal.amount }}</td>
+                            <td class="px-4 text-center">
+                                {% if sal.status == 'Paid' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill">Paid</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 text-center">
+                                <a href="{{ url_for('update_salary_status', salary_id=sal._id) }}" class="btn btn-sm {% if sal.status == 'Paid' %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-circle" title="Toggle Status">
+                                    <i class="fas {% if sal.status == 'Paid' %}fa-times{% else %}fa-check{% endif %}"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-money-check-alt fs-1 mb-3 text-light"></i>
+                                <p class="mb-0">No salary records found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

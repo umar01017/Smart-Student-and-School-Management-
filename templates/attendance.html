@@ -1,0 +1,122 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Attendance Management{% endblock %}
+
+{% block dashboard_content %}
+<div class="card dashboard-card p-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h5 class="fw-bold text-dark mb-1">Class Attendance</h5>
+            <p class="text-muted mb-0">Date: <span class="fw-semibold text-primary">{{ today }}</span></p>
+        </div>
+        
+        {% if role == 'admin' %}
+        <div class="d-flex gap-3">
+            <div class="bg-success bg-opacity-10 text-success px-4 py-2 rounded-3 border border-success fw-bold shadow-sm">
+                Present: {{ present_count }}
+            </div>
+            <div class="bg-danger bg-opacity-10 text-danger px-4 py-2 rounded-3 border border-danger fw-bold shadow-sm">
+                Absent: {{ absent_count }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search box -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="input-group shadow-sm border-0 rounded-3 overflow-hidden">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-0 bg-white" placeholder="Search student...">
+            </div>
+        </div>
+    </div>
+
+    {% if role == 'teacher' %}
+    <form method="POST" action="{{ url_for('teacher_attendance') }}">
+        <input type="hidden" name="date" value="{{ today }}">
+    {% endif %}
+
+        <div class="table-responsive">
+            <table class="table table-custom table-hover align-middle" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th scope="col" class="py-3 px-4">Student Name</th>
+                        <th scope="col" class="py-3 px-4">Roll No</th>
+                        <th scope="col" class="py-3 px-4 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td class="px-4 fw-semibold">{{ student.name }}</td>
+                        <td class="px-4 text-muted">{{ student.roll }}</td>
+                        
+                        <td class="px-4 text-center">
+                            {% if role == 'teacher' %}
+                            <input type="hidden" name="student_id" value="{{ student._id }}">
+                            <div class="d-flex justify-content-center gap-3">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input border-secondary" type="radio" name="status_{{ student._id }}" id="present_{{ student._id }}" value="Present" {% if student.today_status == 'Present' %}checked{% endif %}>
+                                    <label class="form-check-label text-success fw-semibold" for="present_{{ student._id }}">Present</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input border-secondary" type="radio" name="status_{{ student._id }}" id="absent_{{ student._id }}" value="Absent" {% if student.today_status == 'Absent' %}checked{% endif %}>
+                                    <label class="form-check-label text-danger fw-semibold" for="absent_{{ student._id }}">Absent</label>
+                                </div>
+                            </div>
+                            {% else %}
+                                {% if student.today_status == 'Present' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check me-1"></i>Present</span>
+                                {% elif student.today_status == 'Absent' %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="fas fa-times me-1"></i>Absent</span>
+                                {% else %}
+                                <span class="badge bg-secondary px-3 py-2 rounded-pill">Not Marked</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            <i class="fas fa-users fs-1 mb-3 text-light"></i>
+                            <p class="mb-0">No students available to mark attendance.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if role == 'teacher' %}
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-5 rounded-3 fw-bold shadow-sm">
+                <i class="fas fa-save me-2"></i>Save Attendance
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Real-time table filter
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let searchValue = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#attendanceTable tbody tr');
+        
+        rows.forEach(row => {
+            if (row.cells.length > 2) { // Skip empty state row
+                let name = row.cells[0].textContent.toLowerCase();
+                let roll = row.cells[1].textContent.toLowerCase();
+                if (name.includes(searchValue) || roll.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

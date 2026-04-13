@@ -1,0 +1,26 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block dashboard_content %}
+<div class="row fade-in">
+    <div class="col-md-6 col-xl-5">
+        <div class="card dashboard-card p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4"><i class="fas fa-university me-2 text-primary"></i>Financial Settings</h5>
+            
+            <form action="{{ url_for('admin_settings') }}" method="POST">
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">School Bank Account Number</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-money-check text-muted"></i></span>
+                        <input type="text" class="form-control bg-light border-0 form-control-lg" name="bank_account" value="{{ bank_account }}" placeholder="e.g. 1234-5678-9012" required>
+                    </div>
+                    <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i>This account number will be printed on all student PDF fee vouchers globally.</div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm">Save Settings</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

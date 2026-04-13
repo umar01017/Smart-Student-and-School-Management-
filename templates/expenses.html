@@ -1,0 +1,90 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Daily Expenses Setup{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 fade-in">
+    <!-- Expenses Summary -->
+    <div class="col-md-4">
+        <div class="card dashboard-card border-0 shadow-sm h-100">
+            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                <div class="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex justify-content-center align-items-center mb-3 mx-auto" style="width: 80px; height: 80px;">
+                    <i class="fas fa-hand-holding-usd fs-1"></i>
+                </div>
+                <h6 class="text-uppercase fw-bold text-muted mb-2">Total Expenses</h6>
+                <h2 class="fw-bold mb-0 text-danger">${{ "%.2f"|format(total_expenses|default(0)) }}</h2>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Expense Form -->
+    <div class="col-md-8">
+        <div class="card dashboard-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold text-dark mb-0">Record New Expense</h5>
+            </div>
+            <form action="{{ url_for('add_expense') }}" method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Description</label>
+                        <input type="text" class="form-control bg-light border-0" name="description" placeholder="e.g. Office Supplies" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Amount ($)</label>
+                        <input type="number" step="0.01" class="form-control bg-light border-0" name="amount" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Date</label>
+                        <input type="date" class="form-control bg-light border-0" name="date" required value="{{ today }}">
+                    </div>
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn btn-danger px-4 fw-bold shadow-sm">
+                            <i class="fas fa-plus me-2"></i>Add Expense
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card dashboard-card p-4 mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold text-dark mb-0">Expense History</h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col" class="py-3 px-4">Date</th>
+                    <th scope="col" class="py-3 px-4">Description</th>
+                    <th scope="col" class="py-3 px-4">Amount</th>
+                    <th scope="col" class="py-3 px-4 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td class="px-4 fw-semibold text-muted">{{ expense.date }}</td>
+                    <td class="px-4">{{ expense.description }}</td>
+                    <td class="px-4 text-danger fw-bold">${{ "%.2f"|format(expense.amount) }}</td>
+                    <td class="px-4 text-center">
+                        <a href="{{ url_for('delete_expense', expense_id=expense._id) }}" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="return confirm('Delete this expense record?');" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <i class="fas fa-receipt fs-1 mb-3 text-light"></i>
+                        <p class="mb-0">No expenses recorded yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

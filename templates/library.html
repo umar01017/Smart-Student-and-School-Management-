@@ -1,0 +1,142 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Library Management{% endblock %}
+
+{% block dashboard_content %}
+<div class="card dashboard-card p-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold text-dark mb-0">Library Catalog</h5>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addBookModal">
+            <i class="fas fa-plus me-2"></i>Add Book
+        </button>
+    </div>
+
+    <!-- Search/Filter section -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="input-group shadow-sm border-0 rounded-3 overflow-hidden">
+                <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-0 bg-white" placeholder="Search title or author...">
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle" id="booksTable">
+            <thead>
+                <tr>
+                    <th scope="col" class="py-3 px-4">Title</th>
+                    <th scope="col" class="py-3 px-4">Author</th>
+                    <th scope="col" class="py-3 px-4">Status</th>
+                    <th scope="col" class="py-3 px-4">Issued To</th>
+                    <th scope="col" class="py-3 px-4 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td class="px-4 fw-semibold">{{ book.title }}</td>
+                    <td class="px-4 text-muted">{{ book.author }}</td>
+                    <td class="px-4">
+                        {% if book.status == 'Available' %}
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1">Available</span>
+                        {% else %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">Issued</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 text-muted">{{ book.issued_to|default('-', true) }}</td>
+                    <td class="px-4 text-center">
+                        {% if book.status == 'Available' %}
+                        <button class="btn btn-sm btn-outline-primary border-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#issueBookModal{{ book._id }}" title="Issue Book">
+                            <i class="fas fa-hand-holding"></i>
+                        </button>
+                        {% else %}
+                        <a href="{{ url_for('return_book', book_id=book._id) }}" class="btn btn-sm btn-outline-success border-0 rounded-circle" title="Return Book">
+                            <i class="fas fa-undo"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('delete_book', book_id=book._id) }}" class="btn btn-sm btn-outline-danger border-0 rounded-circle ms-1" onclick="return confirm('Delete this book?');" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Issue Book Modal for this specific book -->
+                <div class="modal fade" id="issueBookModal{{ book._id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-bottom-0 pt-4 pb-0 px-4">
+                                <h5 class="modal-title fw-bold">Issue Book: {{ book.title }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <form action="{{ url_for('issue_book', book_id=book._id) }}" method="POST">
+                                    <div class="mb-4">
+                                        <label class="form-label text-muted small fw-semibold text-uppercase">Student Name/Roll No</label>
+                                        <input type="text" class="form-control form-control-lg bg-light border-0" name="issued_to" required placeholder="Who is borrowing this library book?">
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100 py-3 rounded-3 fw-bold shadow-sm">Confirm Issue</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="fas fa-book-open fs-1 mb-3 text-light"></i>
+                        <p class="mb-0">No books found in the library. Add one to get started.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Book Modal -->
+<div class="modal fade" id="addBookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 pb-0 px-4">
+                <h5 class="modal-title fw-bold">Add New Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="{{ url_for('add_book') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Book Title</label>
+                        <input type="text" class="form-control form-control-lg bg-light border-0" name="title" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Author Name</label>
+                        <input type="text" class="form-control form-control-lg bg-light border-0" name="author" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm">Save Book</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let searchValue = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#booksTable tbody tr');
+        
+        rows.forEach(row => {
+            if (row.cells.length > 2) {
+                let title = row.cells[0].textContent.toLowerCase();
+                let author = row.cells[1].textContent.toLowerCase();
+                if (title.includes(searchValue) || author.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

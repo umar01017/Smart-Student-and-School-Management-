@@ -1,0 +1,173 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}My Fees{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 mb-4 fade-in">
+    <!-- Fee Summary Cards -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: white;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="text-white-50 mb-0 fw-bold text-uppercase">Total Due</h6>
+                <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+            </div>
+            <h2 class="fw-bold mb-0">${{ '%.2f' % total_due }}</h2>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-xl-4">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="text-white-50 mb-0 fw-bold text-uppercase">Total Paid</h6>
+                <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <h2 class="fw-bold mb-0">${{ '%.2f' % total_paid }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row fade-in" style="animation-delay: 0.1s;">
+    <div class="col-12">
+        <div class="card dashboard-card p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Fee Statement</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Description</th>
+                            <th scope="col" class="py-3 px-4">Amount</th>
+                            <th scope="col" class="py-3 px-4">Due Date</th>
+                            <th scope="col" class="py-3 px-4 text-center">Status</th>
+                            <th scope="col" class="py-3 px-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td class="px-4 fw-semibold text-dark">{{ fee.description }}</td>
+                            <td class="px-4 fw-bold">${{ '%.2f' % fee.amount }}</td>
+                            <td class="px-4 text-muted">{{ fee.due_date }}</td>
+                            <td class="px-4 text-center">
+                                {% if fee.status == 'Paid' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-check me-1"></i>Paid</span>
+                                <div class="small text-muted mt-1">via {{ fee.payment_method }}</div>
+                                {% else %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fas fa-clock me-1"></i>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 text-center">
+                                {% if fee.status == 'Pending' %}
+                                <div class="d-flex flex-column gap-2 align-items-center">
+                                    <button class="btn btn-primary fw-bold px-3 py-1 shadow-sm rounded-pill w-100" onclick="openPaymentModal('{{ fee._id }}', '{{ fee.amount }}', '{{ fee.description }}')">
+                                        Pay Now
+                                    </button>
+                                    <form action="{{ url_for('apply_installment', fee_id=fee._id) }}" method="POST" class="d-inline w-100">
+                                        <button type="submit" class="btn btn-outline-warning text-dark px-3 py-1 shadow-sm rounded-pill w-100" onclick="return confirm('Split this fee into two equal installments?');">
+                                            Installments
+                                        </button>
+                                    </form>
+                                    <a href="{{ url_for('generate_fee_voucher', fee_id=fee._id) }}" class="btn btn-outline-info px-3 py-1 shadow-sm rounded-pill w-100">
+                                        <i class="fas fa-file-pdf me-1"></i>Voucher
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="d-flex flex-column gap-2 align-items-center">
+                                    <button class="btn btn-light text-muted px-4 py-2 rounded-pill border w-100" disabled>
+                                        Settled
+                                    </button>
+                                    <a href="{{ url_for('generate_fee_voucher', fee_id=fee._id) }}" class="btn btn-outline-info px-3 py-1 shadow-sm rounded-pill w-100">
+                                        <i class="fas fa-file-pdf me-1"></i>Voucher
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-glass-cheers fs-1 mb-3 text-light"></i>
+                                <p class="mb-0">You have no fee records. You're all caught up!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pt-4 pb-0 px-4">
+                <h5 class="modal-title fw-bold">Select Payment Method</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <h6 class="text-muted" id="modalFeeDesc"></h6>
+                    <h2 class="fw-bold text-dark" id="modalFeeAmount"></h2>
+                </div>
+                
+                <form id="paymentForm" method="POST" action="">
+                    <div class="d-grid gap-3">
+                        <label class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <div class="d-flex align-items-center">
+                                <i class="fab fa-cc-visa fs-3 me-3"></i>
+                                <i class="fab fa-cc-mastercard fs-3 me-3"></i>
+                                <span class="fw-bold">Credit/Debit Card</span>
+                            </div>
+                            <input type="radio" name="payment_method" value="Credit Card" class="form-check-input" required>
+                        </label>
+                        
+                        <label class="btn btn-outline-info d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <div class="d-flex align-items-center">
+                                <i class="fab fa-paypal fs-3 me-3"></i>
+                                <span class="fw-bold">PayPal</span>
+                            </div>
+                            <input type="radio" name="payment_method" value="PayPal" class="form-check-input" required>
+                        </label>
+                        
+                        <label class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3 rounded-3 text-start">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-university fs-3 me-3"></i>
+                                <span class="fw-bold">Bank Transfer</span>
+                            </div>
+                            <input type="radio" name="payment_method" value="Bank Transfer" class="form-check-input" required>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100 py-3 mt-4 rounded-3 fw-bold shadow-sm">
+                        <i class="fas fa-lock me-2"></i>Securely Pay Now
+                    </button>
+                    <div class="text-center mt-3">
+                        <small class="text-muted"><i class="fas fa-shield-alt me-1"></i>This is a simulated payment gateway.</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openPaymentModal(feeId, amount, description) {
+        document.getElementById('modalFeeAmount').innerText = '$' + parseFloat(amount).toFixed(2);
+        document.getElementById('modalFeeDesc').innerText = 'Paying for: ' + description;
+        
+        // Dynamically set form action
+        document.getElementById('paymentForm').action = '/student/fee/pay/' + feeId;
+        
+        var paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        paymentModal.show();
+    }
+</script>
+{% endblock %}

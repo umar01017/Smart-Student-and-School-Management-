@@ -1,0 +1,134 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Admin Overview{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 mb-4 fade-in">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100 p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted mb-2 fw-semibold">Total Students</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_students }}</h3>
+                </div>
+                <div class="card-icon-wrapper bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-user-graduate fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100 p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted mb-2 fw-semibold">Total Teachers</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_teachers }}</h3>
+                </div>
+                <div class="card-icon-wrapper bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-chalkboard-teacher fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100 p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted mb-2 fw-semibold">System Users</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_users }}</h3>
+                </div>
+                <div class="card-icon-wrapper bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-users fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card dashboard-card h-100 p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-muted mb-2 fw-semibold">Avg Attendance</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ avg_attendance }}%</h3>
+                </div>
+                <div class="card-icon-wrapper bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-chart-pie fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4 fade-in" style="animation-delay: 0.1s;">
+    <div class="col-lg-8">
+        <div class="card dashboard-card h-100 p-4">
+            <h5 class="fw-bold mb-4 text-dark">Attendance Trend (Last 7 Days)</h5>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="attendanceLineChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card dashboard-card h-100 p-4">
+            <h5 class="fw-bold mb-4 text-dark">Present vs Absent (Today)</h5>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="attendancePieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const lineCtx = document.getElementById('attendanceLineChart').getContext('2d');
+    new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: {{ dates | safe }},
+            datasets: [{
+                label: 'Present Students',
+                data: {{ present_counts }},
+                borderColor: '#667eea',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(102, 126, 234, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    const pieCtx = document.getElementById('attendancePieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [{{ today_present }}, {{ today_absent }}],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20 }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

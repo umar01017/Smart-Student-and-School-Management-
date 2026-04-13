@@ -1,0 +1,139 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Student Portal{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 mb-4 fade-in">
+    <div class="col-12 col-xl-8">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); color: white;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Hello, {{ student.name }}!</h3>
+                    <p class="mb-0 text-white-50">{{ student.department }} | Roll No: {{ student.roll }}</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3 d-none d-sm-block">
+                    <i class="fas fa-user-graduate fs-1"></i>
+                </div>
+            </div>
+            
+            <div class="row mt-auto g-3">
+                <div class="col-sm-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                        <h6 class="text-white-50 mb-1">Attendance</h6>
+                        <h2 class="fw-bold mb-0 {% if attendance_perc >= 75 %}text-light{% else %}text-warning{% endif %}">{{ attendance_perc }}%</h2>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                        <h6 class="text-white-50 mb-1">Classes Attended</h6>
+                        <h2 class="fw-bold mb-0">{{ present_classes }}/{{ total_classes }}</h2>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-3 text-center">
+                        <h6 class="text-white-50 mb-1">Absences</h6>
+                        <h2 class="fw-bold mb-0">{{ absent_classes }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-xl-4">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Quick Actions</h5>
+            
+            <a href="{{ url_for('download_report') }}" class="btn btn-outline-primary w-100 p-3 mb-3 d-flex align-items-center text-start rounded-3 shadow-sm transition">
+                <div class="bg-primary text-white rounded-circle p-2 me-3 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Download Report</h6>
+                    <small class="text-muted">Export attendance to PDF</small>
+                </div>
+            </a>
+            
+            <a href="/student/profile" class="btn btn-outline-info w-100 p-3 mb-3 d-flex align-items-center text-start rounded-3 shadow-sm transition">
+                <div class="bg-info text-white rounded-circle p-2 me-3 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">Update Profile</h6>
+                    <small class="text-muted">Manage your personal info</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4 fade-in" style="animation-delay: 0.1s;">
+    <div class="col-lg-6">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Visual Analytics</h5>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="studentPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card dashboard-card h-100 p-0 border-0 shadow-sm overflow-hidden">
+            <div class="p-4 border-bottom bg-light bg-opacity-50">
+                <h5 class="fw-bold text-dark mb-0">Recent Attendance History</h5>
+            </div>
+            <div class="p-0">
+                <ul class="list-group list-group-flush">
+                    {% for record in history %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center p-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-alt text-muted me-3 fs-5"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ record.date }}</h6>
+                            </div>
+                        </div>
+                        {% if record.status == 'Present' %}
+                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">Present</span>
+                        {% else %}
+                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">Absent</span>
+                        {% endif %}
+                    </li>
+                    {% else %}
+                    <li class="list-group-item p-5 text-center text-muted">
+                        <i class="fas fa-history fs-1 mb-3 text-light"></i>
+                        <p class="mb-0">No past attendance records found.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const pieCtx = document.getElementById('studentPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [{{ present_classes }}, {{ absent_classes }}],
+                backgroundColor: ['#10b981', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { usePointStyle: true, padding: 20 }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

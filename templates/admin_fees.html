@@ -1,0 +1,94 @@
+{% extends "dashboard_base.html" %}
+
+{% block page_title %}Fee Management{% endblock %}
+
+{% block dashboard_content %}
+<div class="row g-4 mb-4 fade-in">
+    <!-- Assign Fee Form -->
+    <div class="col-xl-4">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Assign New Fee</h5>
+            <form action="{{ url_for('add_fee') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Student</label>
+                    <select class="form-select bg-light border-0" name="student_id" required>
+                        <option value="" selected disabled>Select a student...</option>
+                        {% for student in students %}
+                        <option value="{{ student._id }}">{{ student.name }} ({{ student.roll }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Amount ($)</label>
+                    <input type="number" step="0.01" class="form-control bg-light border-0" name="amount" placeholder="e.g. 500.00" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Description</label>
+                    <input type="text" class="form-control bg-light border-0" name="description" placeholder="e.g. Tuition Fee Q1" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-semibold text-uppercase">Due Date</label>
+                    <input type="date" class="form-control bg-light border-0" name="due_date" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm">Assign Fee</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fee Records Table -->
+    <div class="col-xl-8">
+        <div class="card dashboard-card h-100 p-4 border-0 shadow-sm">
+            <h5 class="fw-bold text-dark mb-4">Fee Records</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-custom table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Student</th>
+                            <th scope="col" class="py-3 px-4">Description</th>
+                            <th scope="col" class="py-3 px-4">Amount</th>
+                            <th scope="col" class="py-3 px-4 text-center">Due Date</th>
+                            <th scope="col" class="py-3 px-4 text-center">Status</th>
+                            <th scope="col" class="py-3 px-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td class="px-4 fw-semibold">{{ fee.student_name }}</td>
+                            <td class="px-4 text-muted">{{ fee.description }}</td>
+                            <td class="px-4 fw-bold">${{ '%.2f' % fee.amount }}</td>
+                            <td class="px-4 text-center">{{ fee.due_date }}</td>
+                            <td class="px-4 text-center">
+                                {% if fee.status == 'Paid' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill">Paid</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ url_for('update_fee_status', fee_id=fee._id) }}" class="btn btn-sm {% if fee.status == 'Paid' %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-circle" title="Toggle Status">
+                                    <i class="fas {% if fee.status == 'Paid' %}fa-times{% else %}fa-check{% endif %}"></i>
+                                </a>
+                                <a href="{{ url_for('generate_fee_voucher', fee_id=fee._id) }}" class="btn btn-sm btn-outline-info rounded-circle" title="Download Voucher">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-file-invoice fs-1 mb-3 text-light"></i>
+                                <p class="mb-0">No fee records found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
